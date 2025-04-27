@@ -1,44 +1,54 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type FavoritesContextType = {
+interface FavoritesContextType {
   favorites: number[];
   toggleFavorite: (id: number) => void;
   isFavorite: (id: number) => boolean;
-};
+}
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [favorites, setFavorites] = useState<number[]>([]);
 
-  // Загрузка избранного из AsyncStorage при старте
+  // Загрузка избранных из AsyncStorage при старте
   useEffect(() => {
     const loadFavorites = async () => {
       try {
-        const data = await AsyncStorage.getItem('favorites');
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (Array.isArray(parsed)) {
-            setFavorites(parsed);
-          }
+        const storedFavorites = await AsyncStorage.getItem('favorites');
+        if (storedFavorites) {
+          setFavorites(JSON.parse(storedFavorites));
         }
       } catch (error) {
-        console.warn('Ошибка загрузки избранного:', error);
+        console.error('Ошибка загрузки избранных:', error);
       }
     };
+
     loadFavorites();
   }, []);
 
-  // Сохранение избранного при изменении
+  // Сохранение избранных в AsyncStorage при изменении
   useEffect(() => {
-    AsyncStorage.setItem('favorites', JSON.stringify(favorites));
+    const saveFavorites = async () => {
+      try {
+        await AsyncStorage.setItem('favorites', JSON.stringify(favorites));
+      } catch (error) {
+        console.error('Ошибка сохранения избранных:', error);
+      }
+    };
+
+    saveFavorites();
   }, [favorites]);
 
   const toggleFavorite = (id: number) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id]
-    );
+    setFavorites((prevFavorites) => {
+      if (prevFavorites.includes(id)) {
+        return prevFavorites.filter((favId) => favId !== id);
+      } else {
+        return [...prevFavorites, id];
+      }
+    });
   };
 
   const isFavorite = (id: number) => favorites.includes(id);
@@ -50,10 +60,13 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-export const useFavorites = (): FavoritesContextType => {
+// Хук для использования
+export const useFavorites = () => {
   const context = useContext(FavoritesContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useFavorites must be used within a FavoritesProvider');
   }
   return context;
 };
+
+export default FavoritesProvider;
