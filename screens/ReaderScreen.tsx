@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Print from 'expo-print';
+import { Ionicons } from '@expo/vector-icons';
 
 // Первый текст материала
 const materialContent1 = `
@@ -24,7 +26,7 @@ const materialContent1 = `
 `;
 
 // Сноски для первого материала
-const footnotes1: { [key: string]: string } = {
+const footnotes1 = {
   "1": "См. также маамар «Ве-кабель ѓа-йеѓудим» того года, п. 7 (Торат Менахем, т.2, с.292. Торат Менахем Сефер ѓа-маамарим адар, с.60).",
   "2": "Гл. 1, закон 5; гл. 2, закон 10.",
 };
@@ -47,7 +49,7 @@ const materialContent2 = `
 `;
 
 // Сноски для второго материала
-const footnotes2: { [key: string]: string } = {
+const footnotes2 = {
   "1": "Согласно сказанному в Зхарья, 13:2.",
   "2": "Йешаяѓу, 52:12.",
   "3": "Гл. 31.",
@@ -60,15 +62,20 @@ export default function ReaderScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalText, setModalText] = useState('');
 
-  // Определяем, какой текст и какие сноски подставить
   const selectedMaterial = id === 1 ? materialContent1 : materialContent2;
-  const selectedFootnotes = id === 1 ? footnotes1 : footnotes2;
-
+  const selectedFootnotes: { [key: string]: string } = id === 1 ? footnotes1 : footnotes2;
+ 
   const handleOpenFootnote = (key: string) => {
     if (selectedFootnotes[key]) {
       setModalText(selectedFootnotes[key]);
       setModalVisible(true);
     }
+  };
+
+  const handlePrint = async () => {
+    await Print.printAsync({
+      html: `<html><body><pre style='font-size:16px;'>${selectedMaterial}</pre></body></html>`,
+    });
   };
 
   const renderTextWithFootnotes = (text: string) => {
@@ -117,11 +124,15 @@ export default function ReaderScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.headerRow}>
         <Text style={styles.title}>Материал {id}</Text>
+        <Pressable onPress={handlePrint} style={styles.printButton}>
+          <Ionicons name="print" size={24} color="#007BFF" />
+        </Pressable>
+      </View>
+      <ScrollView contentContainerStyle={styles.container}>
         {renderTextWithFootnotes(selectedMaterial)}
       </ScrollView>
-
       <Modal
         visible={modalVisible}
         transparent
@@ -142,6 +153,13 @@ export default function ReaderScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
   container: {
     flexGrow: 1,
     padding: 20,
@@ -161,6 +179,9 @@ const styles = StyleSheet.create({
   link: {
     fontSize: 18,
     color: '#007BFF',
+  },
+  printButton: {
+    padding: 8,
   },
   modalOverlay: {
     flex: 1,

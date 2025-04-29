@@ -8,6 +8,7 @@ const { width } = Dimensions.get("window");
 
 const localImages: { [key: string]: any } = {
   "cover-22-28-nisan": require("../assets/images/cover-22-28-nisan.jpg"),
+  "cover-15-21-nisan": require("../assets/images/cover-15-21-nisan.jpg"),
 };
 
 const data: Material[] = [
@@ -21,7 +22,7 @@ const data: Material[] = [
     id: 2,
     title: "Беседа Ребе — Песах 5711 (копия)",
     date: "20 апреля 2025",
-    image: "local/cover-22-28-nisan",
+    image: "local/cover-15-21-nisan",
   },
 ];
 
